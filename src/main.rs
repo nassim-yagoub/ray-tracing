@@ -1,3 +1,6 @@
+mod color;
+use color::Color;
+
 fn main() {
     const IMAGE_HEIGHT: i32 = 256;
     const IMAGE_WIDTH: i32 = 256;
@@ -11,11 +14,9 @@ fn main() {
             let g = j as f64 / (IMAGE_HEIGHT - 1) as f64;
             let b = 0.25;
 
-            let ir = (255.99 * r) as u8;
-            let ig = (255.99 * g) as u8;
-            let ib = (255.99 * b) as u8;
+            let pixel_color: Color = Color::new(r, g, b);
 
-            println!("{} {} {}", ir, ig, ib);
+            pixel_color.write_color()
         }
     }
 }
