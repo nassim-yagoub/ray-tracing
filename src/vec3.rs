@@ -1,5 +1,7 @@
 use core::fmt;
-use std::ops::{Add, Sub};
+use std::ops::{Add, Div, Mul, Neg, Sub};
+
+pub type Point3 = Vec3;
 
 pub struct Vec3 {
     x: f64,
@@ -10,6 +12,17 @@ pub struct Vec3 {
 impl fmt::Display for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "({}, {}, {})", self.x, self.y, self.z)
+    }
+}
+
+impl Neg for &Vec3 {
+    type Output = Vec3;
+    fn neg(self) -> Vec3 {
+        Vec3 {
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+        }
     }
 }
 
@@ -35,24 +48,114 @@ impl Sub<&Vec3> for &Vec3 {
     }
 }
 
+impl Mul<f64> for &Vec3 {
+    type Output = Vec3;
+    fn mul(self, t: f64) -> Vec3 {
+        Vec3 {
+            x: t * self.x,
+            y: t * self.y,
+            z: t * self.z,
+        }
+    }
+}
+
+impl Mul<&Vec3> for f64 {
+    type Output = Vec3;
+    fn mul(self, vector: &Vec3) -> Vec3 {
+        Vec3 {
+            x: self * vector.x,
+            y: self * vector.y,
+            z: self * vector.z,
+        }
+    }
+}
+
+impl Div<f64> for &Vec3 {
+    type Output = Vec3;
+    fn div(self, t: f64) -> Self::Output {
+        Vec3 {
+            x: self.x / t,
+            y: self.y / t,
+            z: self.z / t,
+        }
+    }
+}
+
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x, y, z }
     }
 
-    pub fn multiply(&self, factor: f64) -> Vec3 {
-        Vec3 {
-            x: self.x * factor,
-            y: self.y * factor,
-            z: self.z * factor,
-        }
-    }
-
-    pub fn divide(&self, divider: f64) -> Vec3 {
-        self.multiply(1. / divider)
-    }
-
     pub fn length(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::*;
+
+    macro_rules! assert_vec3_equal {
+        ($expected:expr, $actual:expr) => {
+            let tolerance = 0.0001;
+            assert_relative_eq!($expected.x, $actual.x, epsilon = tolerance);
+            assert_relative_eq!($expected.y, $actual.y, epsilon = tolerance);
+            assert_relative_eq!($expected.z, $actual.z, epsilon = tolerance);
+        };
+    }
+
+    #[test]
+    fn negation() {
+        let vector = Vec3::new(1.0, 2.5, 4.0);
+        let result = -&vector;
+        let expected = Vec3::new(-1.0, -2.5, -4.0);
+        assert_vec3_equal!(expected, result);
+    }
+
+    #[test]
+    fn addition() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        let vector2 = Vec3::new(4.0, 5.0, 6.0);
+        let result = &vector1 + &vector2;
+        let expected = Vec3::new(5.0, 7.0, 9.0);
+        assert_vec3_equal!(expected, result);
+    }
+
+    #[test]
+    fn substraction() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        let vector2 = Vec3::new(6.0, 5.0, 4.0);
+        let result = &vector1 - &vector2;
+        let expected = Vec3::new(-5.0, -3.0, -1.0);
+        assert_vec3_equal!(expected, result);
+    }
+
+    #[test]
+    fn multiplication() {
+        let vector = Vec3::new(1.0, 2.0, 3.0);
+        let factor = 3.0;
+        let result1 = factor * &vector;
+        let result2 = &vector * factor;
+        let expected = Vec3::new(3.0, 6.0, 9.0);
+        assert_vec3_equal!(expected, result1);
+        assert_vec3_equal!(expected, result2);
+    }
+
+    #[test]
+    fn division() {
+        let vector = Vec3::new(1.0, 2.0, 3.0);
+        let divider = 2.0;
+        let result = &vector / divider;
+        let expected = Vec3::new(0.5, 1.0, 1.5);
+        assert_vec3_equal!(expected, result);
+    }
+
+    #[test]
+    fn length() {
+        let vector = Vec3::new(1.0, 2.0, 3.0);
+        let result = vector.length();
+        let expected = 14.0_f64.sqrt();
+        assert_eq!(expected, result);
     }
 }
