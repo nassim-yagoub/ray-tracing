@@ -6,7 +6,20 @@ use color::Color;
 use ray::Ray;
 use vec3::{Point3, Vec3};
 
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+    let oc: Vec3 = r.origin - *center;
+    let a = r.direction.dot(r.direction);
+    let b = 2.0 * oc.dot(r.direction);
+    let c = oc.dot(oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    return discriminant > 0.0;
+}
+
 fn ray_color(ray: &Ray) -> Color {
+    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, ray) {
+        return Color::new(1.0, 0.0, 0.0);
+    }
+
     let unit_direction = ray.direction.unit_vector();
     let t = 0.5 * (unit_direction.y + 1.0);
 
@@ -38,8 +51,8 @@ fn main() {
     for i in (0..IMAGE_HEIGHT).rev() {
         eprintln!("\rLines remaining: {}", i);
         for j in 0..IMAGE_WIDTH {
-            let v = i as f64 / (IMAGE_WIDTH - 1) as f64;
-            let u = j as f64 / (IMAGE_HEIGHT - 1) as f64;
+            let v = i as f64 / (IMAGE_HEIGHT - 1) as f64;
+            let u = j as f64 / (IMAGE_WIDTH - 1) as f64;
 
             let r = Ray::new(
                 origin,

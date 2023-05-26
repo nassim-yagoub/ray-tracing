@@ -94,6 +94,10 @@ impl Vec3 {
     pub fn unit_vector(self) -> Vec3 {
         self / self.length()
     }
+
+    pub fn dot(&self, other: Vec3) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
 }
 
 #[cfg(test)]
@@ -170,5 +174,14 @@ mod tests {
         let result = vector.unit_vector();
         let expected = vector / 14.0_f64.sqrt();
         assert_vec3_equal!(expected, result);
+    }
+
+    #[test]
+    fn dot() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        let vector2 = Vec3::new(4.0, 5.0, 6.0);
+        let result = vector1.dot(vector2);
+        let expected = 32.0;
+        assert_eq!(expected, result);
     }
 }
