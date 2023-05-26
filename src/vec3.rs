@@ -3,10 +3,11 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub type Point3 = Vec3;
 
+#[derive(Clone, Copy)]
 pub struct Vec3 {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl fmt::Display for Vec3 {
@@ -15,7 +16,7 @@ impl fmt::Display for Vec3 {
     }
 }
 
-impl Neg for &Vec3 {
+impl Neg for Vec3 {
     type Output = Vec3;
     fn neg(self) -> Vec3 {
         Vec3 {
@@ -26,9 +27,9 @@ impl Neg for &Vec3 {
     }
 }
 
-impl Add<&Vec3> for &Vec3 {
+impl Add<Vec3> for Vec3 {
     type Output = Vec3;
-    fn add(self, other: &Vec3) -> Vec3 {
+    fn add(self, other: Vec3) -> Vec3 {
         Vec3 {
             x: self.x + other.x,
             y: self.y + other.y,
@@ -37,9 +38,9 @@ impl Add<&Vec3> for &Vec3 {
     }
 }
 
-impl Sub<&Vec3> for &Vec3 {
+impl Sub<Vec3> for Vec3 {
     type Output = Vec3;
-    fn sub(self, other: &Vec3) -> Vec3 {
+    fn sub(self, other: Vec3) -> Vec3 {
         Vec3 {
             x: self.x - other.x,
             y: self.y - other.y,
@@ -48,7 +49,7 @@ impl Sub<&Vec3> for &Vec3 {
     }
 }
 
-impl Mul<f64> for &Vec3 {
+impl Mul<f64> for Vec3 {
     type Output = Vec3;
     fn mul(self, t: f64) -> Vec3 {
         Vec3 {
@@ -59,9 +60,9 @@ impl Mul<f64> for &Vec3 {
     }
 }
 
-impl Mul<&Vec3> for f64 {
+impl Mul<Vec3> for f64 {
     type Output = Vec3;
-    fn mul(self, vector: &Vec3) -> Vec3 {
+    fn mul(self, vector: Vec3) -> Vec3 {
         Vec3 {
             x: self * vector.x,
             y: self * vector.y,
@@ -70,7 +71,7 @@ impl Mul<&Vec3> for f64 {
     }
 }
 
-impl Div<f64> for &Vec3 {
+impl Div<f64> for Vec3 {
     type Output = Vec3;
     fn div(self, t: f64) -> Self::Output {
         Vec3 {
@@ -88,6 +89,10 @@ impl Vec3 {
 
     pub fn length(&self) -> f64 {
         (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+    }
+
+    pub fn unit_vector(self) -> Vec3 {
+        self / self.length()
     }
 }
 
@@ -108,7 +113,7 @@ mod tests {
     #[test]
     fn negation() {
         let vector = Vec3::new(1.0, 2.5, 4.0);
-        let result = -&vector;
+        let result = -vector;
         let expected = Vec3::new(-1.0, -2.5, -4.0);
         assert_vec3_equal!(expected, result);
     }
@@ -117,7 +122,7 @@ mod tests {
     fn addition() {
         let vector1 = Vec3::new(1.0, 2.0, 3.0);
         let vector2 = Vec3::new(4.0, 5.0, 6.0);
-        let result = &vector1 + &vector2;
+        let result = vector1 + vector2;
         let expected = Vec3::new(5.0, 7.0, 9.0);
         assert_vec3_equal!(expected, result);
     }
@@ -126,7 +131,7 @@ mod tests {
     fn substraction() {
         let vector1 = Vec3::new(1.0, 2.0, 3.0);
         let vector2 = Vec3::new(6.0, 5.0, 4.0);
-        let result = &vector1 - &vector2;
+        let result = vector1 - vector2;
         let expected = Vec3::new(-5.0, -3.0, -1.0);
         assert_vec3_equal!(expected, result);
     }
@@ -135,8 +140,8 @@ mod tests {
     fn multiplication() {
         let vector = Vec3::new(1.0, 2.0, 3.0);
         let factor = 3.0;
-        let result1 = factor * &vector;
-        let result2 = &vector * factor;
+        let result1 = factor * vector;
+        let result2 = vector * factor;
         let expected = Vec3::new(3.0, 6.0, 9.0);
         assert_vec3_equal!(expected, result1);
         assert_vec3_equal!(expected, result2);
@@ -146,7 +151,7 @@ mod tests {
     fn division() {
         let vector = Vec3::new(1.0, 2.0, 3.0);
         let divider = 2.0;
-        let result = &vector / divider;
+        let result = vector / divider;
         let expected = Vec3::new(0.5, 1.0, 1.5);
         assert_vec3_equal!(expected, result);
     }
@@ -157,5 +162,13 @@ mod tests {
         let result = vector.length();
         let expected = 14.0_f64.sqrt();
         assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn unit_vector() {
+        let vector = Vec3::new(1.0, 2.0, 3.0);
+        let result = vector.unit_vector();
+        let expected = vector / 14.0_f64.sqrt();
+        assert_vec3_equal!(expected, result);
     }
 }
