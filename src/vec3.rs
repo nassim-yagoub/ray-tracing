@@ -1,4 +1,5 @@
 use core::fmt;
+use rand::Rng;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub type Point3 = Vec3;
@@ -85,6 +86,38 @@ impl Div<f64> for Vec3 {
 impl Vec3 {
     pub fn new(x: f64, y: f64, z: f64) -> Vec3 {
         Vec3 { x, y, z }
+    }
+
+    pub fn random() -> Vec3 {
+        let mut rng = rand::thread_rng();
+
+        Vec3 {
+            x: rng.gen::<f64>(),
+            y: rng.gen::<f64>(),
+            z: rng.gen::<f64>(),
+        }
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        let mut vector = Self::random();
+        while vector.length_squared() > 1.0 {
+            vector = Self::random();
+        }
+        return vector;
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        return Self::random_in_unit_sphere().unit_vector();
+    }
+
+    pub fn random_in_hemishpere(normal: Vec3) -> Vec3 {
+        let in_unit_sphere = Self::random_in_unit_sphere();
+
+        if in_unit_sphere.dot(normal) > 0.0 {
+            return in_unit_sphere;
+        } else {
+            return -in_unit_sphere;
+        }
     }
 
     pub fn length_squared(&self) -> f64 {

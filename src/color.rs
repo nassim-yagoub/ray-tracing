@@ -7,9 +7,9 @@ impl Color {
         let scale = 1.0 / samples_per_pixel as f64;
         println!(
             "{} {} {}",
-            (256.0 * Self::clamp(self.x * scale, 0.0, 0.999)) as u8,
-            (256.0 * Self::clamp(self.y * scale, 0.0, 0.999)) as u8,
-            (256.0 * Self::clamp(self.z * scale, 0.0, 0.999)) as u8
+            (256.0 * Self::clamp((self.x * scale).sqrt(), 0.0, 0.999)) as u8,
+            (256.0 * Self::clamp((self.y * scale).sqrt(), 0.0, 0.999)) as u8,
+            (256.0 * Self::clamp((self.z * scale).sqrt(), 0.0, 0.999)) as u8
         );
     }
 

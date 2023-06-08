@@ -13,19 +13,22 @@ use hittable_list::HittableList;
 use rand::Rng;
 use ray::Ray;
 use sphere::Sphere;
-use vec3::Point3;
+use vec3::{Point3, Vec3};
 
-fn ray_color(ray: &Ray, world: &HittableList) -> Color {
-    let rec = world.hit(ray, f64::INFINITY, 0.0);
+fn ray_color(ray: &Ray, world: &HittableList, depth: i32) -> Color {
+    if depth == 0 {
+        return Color {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        };
+    }
+    let rec = world.hit(ray, f64::INFINITY, 0.001);
 
     match rec {
         Some(record) => {
-            return 0.5
-                * Color::new(
-                    record.normal.x + 1.0,
-                    record.normal.y + 1.0,
-                    record.normal.z + 1.0,
-                );
+            let target = record.normal + record.p + Vec3::random_unit_vector();
+            return 0.5 * ray_color(&Ray::new(record.p, target - record.p), world, depth - 1);
         }
         None => {
             let unit_direction = ray.direction.unit_vector();
@@ -41,7 +44,8 @@ fn main() {
     const ASPECT_RATIO: f64 = 16.0 / 9.0;
     const IMAGE_WIDTH: i32 = 400;
     const IMAGE_HEIGHT: i32 = ((IMAGE_WIDTH as f64) / ASPECT_RATIO) as i32;
-    const SAMPLES_PER_PIXEL: i32 = 10;
+    const SAMPLES_PER_PIXEL: i32 = 100;
+    const MAX_DEPTH: i32 = 50;
 
     // World
     let mut world = HittableList::new();
@@ -67,7 +71,7 @@ fn main() {
 
                 let r = camera.get_ray(u, v);
 
-                pixel_color = pixel_color + ray_color(&r, &world);
+                pixel_color = pixel_color + ray_color(&r, &world, MAX_DEPTH);
             }
 
             pixel_color.write_color(SAMPLES_PER_PIXEL)
