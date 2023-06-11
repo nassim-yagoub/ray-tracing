@@ -92,9 +92,9 @@ impl Vec3 {
         let mut rng = rand::thread_rng();
 
         Vec3 {
-            x: rng.gen::<f64>(),
-            y: rng.gen::<f64>(),
-            z: rng.gen::<f64>(),
+            x: rng.gen_range(-1.0..1.0),
+            y: rng.gen_range(-1.0..1.0),
+            z: rng.gen_range(-1.0..1.0),
         }
     }
 

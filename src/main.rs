@@ -16,7 +16,7 @@ use sphere::Sphere;
 use vec3::{Point3, Vec3};
 
 fn ray_color(ray: &Ray, world: &HittableList, depth: i32) -> Color {
-    if depth == 0 {
+    if depth <= 0 {
         return Color {
             x: 0.0,
             y: 0.0,
