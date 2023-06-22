@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use crate::{color::Color, hittable::HitRecord, ray::Ray, vec3::Vec3};
 
 pub trait Material {
@@ -60,6 +62,12 @@ impl Dielectric {
     pub fn new(ir: f64) -> Dielectric {
         Dielectric { ir }
     }
+
+    fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
+        let r0: f64 = (1.0 - ref_idx) / (1.0 + ref_idx);
+
+        return r0 * r0 + (1.0 - r0 * r0) * (1.0 - cosine).powf(5.0);
+    }
 }
 
 impl Material for Dielectric {
@@ -78,8 +86,11 @@ impl Material for Dielectric {
         let cannot_refract: bool = refraction_ratio * sin_theta > 1.0;
 
         let direction: Vec3;
+        let mut rng = rand::thread_rng();
 
-        if cannot_refract {
+        if cannot_refract
+            || Self::reflectance(cos_theta, refraction_ratio) > rng.gen_range(0.0..1.0)
+        {
             direction = unit_direction.reflect(hit_record.normal)
         } else {
             direction = unit_direction.refract(hit_record.normal, refraction_ratio)
