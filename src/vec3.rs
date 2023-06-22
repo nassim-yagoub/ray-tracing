@@ -155,6 +155,14 @@ impl Vec3 {
     pub fn reflect(self, normal: Vec3) -> Vec3 {
         return self - 2.0 * self.dot(normal) * normal;
     }
+
+    pub fn refract(self, normal: Vec3, etai_over_etat: f64) -> Vec3 {
+        let cos_theta = (-self.dot(normal)).min(1.0);
+        let r_out_perp = etai_over_etat * (self + cos_theta * normal);
+        let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * normal;
+
+        return r_out_parallel + r_out_perp;
+    }
 }
 
 #[cfg(test)]
@@ -255,16 +263,16 @@ mod tests {
     #[test]
     fn near_zero() {
         let vector1 = Vec3::new(1.0, 2.0, 3.0);
-        let vector2 = Vec3::new(0.0, 0.0, 0.5*1e-6);
+        let vector2 = Vec3::new(0.0, 0.0, 0.5 * 1e-6);
 
         assert!(!vector1.near_zero());
         assert!(vector2.near_zero());
     }
 
     #[test]
-    fn reflect(){
+    fn reflect() {
         let vector = Vec3::new(0.0, 2.0, 0.0);
-        let normal = Vec3::new(0.0,-1.0,0.0);
+        let normal = Vec3::new(0.0, -1.0, 0.0);
         let result = vector.reflect(normal);
         let expected = Vec3::new(0.0, -2.0, 0.0);
 

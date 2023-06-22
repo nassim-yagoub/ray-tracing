@@ -51,3 +51,32 @@ impl Material for Metal {
         return (self.albedo, scattered, success);
     }
 }
+
+pub struct Dielectric {
+    pub ir: f64,
+}
+
+impl Dielectric {
+    pub fn new(ir: f64) -> Dielectric {
+        Dielectric { ir }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(&self, r_in: &Ray, hit_record: HitRecord) -> (Color, Ray, bool) {
+        let refraction_ratio = if hit_record.front_face {
+            1.0 / self.ir
+        } else {
+            self.ir
+        };
+
+        let unit_direction = r_in.direction.unit_vector();
+        let refracted = unit_direction.refract(hit_record.normal, refraction_ratio);
+
+        return (
+            Color::new(1.0, 1.0, 1.0),
+            Ray::new(hit_record.p, refracted),
+            true,
+        );
+    }
+}
