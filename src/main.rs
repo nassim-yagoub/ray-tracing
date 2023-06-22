@@ -2,6 +2,7 @@ mod camera;
 mod color;
 mod hittable;
 mod hittable_list;
+mod material;
 mod ray;
 mod sphere;
 mod vec3;
@@ -13,22 +14,25 @@ use hittable_list::HittableList;
 use rand::Rng;
 use ray::Ray;
 use sphere::Sphere;
-use vec3::{Point3, Vec3};
+use vec3::Point3;
+
+use crate::material::{Lambertian, Metal};
 
 fn ray_color(ray: &Ray, world: &HittableList, depth: i32) -> Color {
     if depth <= 0 {
-        return Color {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        };
+        return Color::new(0.0, 0.0, 0.0);
     }
     let rec = world.hit(ray, f64::INFINITY, 0.001);
 
     match rec {
         Some(record) => {
-            let target = record.normal + record.p + Vec3::random_unit_vector();
-            return 0.5 * ray_color(&Ray::new(record.p, target - record.p), world, depth - 1);
+            let (attenuation, scattered, success) = record.material.scatter(ray, record);
+
+            if success {
+                return attenuation * ray_color(&scattered, world, depth - 1);
+            }
+
+            return Color::new(0.0, 0.0, 0.0);
         }
         None => {
             let unit_direction = ray.direction.unit_vector();
@@ -49,8 +53,32 @@ fn main() {
 
     // World
     let mut world = HittableList::new();
-    world.add(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5));
-    world.add(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0));
+
+    let material_ground = Lambertian::new(Color::new(0.8, 0.8, 0.0));
+    let material_center = Lambertian::new(Color::new(0.7, 0.3, 0.3));
+    let material_left = Metal::new(Color::new(0.8, 0.8, 0.8));
+    let material_right = Metal::new(Color::new(0.8, 0.6, 0.2));
+
+    world.add(Sphere::new(
+        Point3::new(0.0, 0.0, -1.0),
+        0.5,
+        material_center,
+    ));
+    world.add(Sphere::new(
+        Point3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    ));
+    world.add(Sphere::new(
+        Point3::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left,
+    ));
+    world.add(Sphere::new(
+        Point3::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right,
+    ));
 
     // Camera
     let camera = Camera::new();
@@ -65,7 +93,7 @@ fn main() {
         for j in 0..IMAGE_WIDTH {
             let mut pixel_color = Color::new(0.0, 0.0, 0.0);
 
-            for s in 0..SAMPLES_PER_PIXEL {
+            for _ in 0..SAMPLES_PER_PIXEL {
                 let v = (rng.gen::<f64>() + i as f64) / (IMAGE_HEIGHT - 1) as f64;
                 let u = (rng.gen::<f64>() + j as f64) / (IMAGE_WIDTH - 1) as f64;
 

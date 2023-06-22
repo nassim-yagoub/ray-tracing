@@ -72,6 +72,17 @@ impl Mul<Vec3> for f64 {
     }
 }
 
+impl Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+    fn mul(self, vector: Vec3) -> Vec3 {
+        Vec3 {
+            x: self.x * vector.x,
+            y: self.y * vector.y,
+            z: self.z * vector.z,
+        }
+    }
+}
+
 impl Div<f64> for Vec3 {
     type Output = Vec3;
     fn div(self, t: f64) -> Self::Output {
@@ -135,6 +146,15 @@ impl Vec3 {
     pub fn dot(&self, other: Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
+
+    pub fn near_zero(&self) -> bool {
+        const TOLERANCE: f64 = 1e-6;
+        return self.length() < TOLERANCE;
+    }
+
+    pub fn reflect(self, normal: Vec3) -> Vec3 {
+        return self - 2.0 * self.dot(normal) * normal;
+    }
 }
 
 #[cfg(test)]
@@ -189,6 +209,16 @@ mod tests {
     }
 
     #[test]
+    fn hadamard_product() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        let vector2 = Vec3::new(6.0, 5.0, 4.0);
+        let result = vector1 * vector2;
+        let expected = Vec3::new(6.0, 10.0, 12.0);
+
+        assert_vec3_equal!(result, expected);
+    }
+
+    #[test]
     fn division() {
         let vector = Vec3::new(1.0, 2.0, 3.0);
         let divider = 2.0;
@@ -220,5 +250,24 @@ mod tests {
         let result = vector1.dot(vector2);
         let expected = 32.0;
         assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn near_zero() {
+        let vector1 = Vec3::new(1.0, 2.0, 3.0);
+        let vector2 = Vec3::new(0.0, 0.0, 0.5*1e-6);
+
+        assert!(!vector1.near_zero());
+        assert!(vector2.near_zero());
+    }
+
+    #[test]
+    fn reflect(){
+        let vector = Vec3::new(0.0, 2.0, 0.0);
+        let normal = Vec3::new(0.0,-1.0,0.0);
+        let result = vector.reflect(normal);
+        let expected = Vec3::new(0.0, -2.0, 0.0);
+
+        assert_vec3_equal!(expected, result);
     }
 }

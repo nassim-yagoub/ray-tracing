@@ -1,20 +1,26 @@
 use crate::{
     hittable::{HitRecord, Hittable},
+    material::Material,
     vec3::{Point3, Vec3},
 };
 
-pub struct Sphere {
+pub struct Sphere<T: Material> {
     center: Point3,
     radius: f64,
+    material: T,
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Sphere {
-        Sphere { center, radius }
+impl<T: Material> Sphere<T> {
+    pub fn new(center: Point3, radius: f64, material: T) -> Sphere<T> {
+        Sphere {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
-impl Hittable for Sphere {
+impl<T: Material> Hittable for Sphere<T> {
     fn hit(&self, ray: &crate::ray::Ray, t_max: f64, t_min: f64) -> Option<HitRecord> {
         let oc: Vec3 = ray.origin - self.center;
         let a = ray.direction.length_squared();
@@ -39,7 +45,13 @@ impl Hittable for Sphere {
         let outward_normal = (ray.at(root) - self.center) / self.radius;
         let front_face = ray.direction.dot(outward_normal) < 0.0;
 
-        let rec = HitRecord::new(ray.at(root), outward_normal, root, front_face);
+        let rec = HitRecord::new(
+            ray.at(root),
+            outward_normal,
+            root,
+            front_face,
+            &self.material,
+        );
 
         return Some(rec);
     }
@@ -47,7 +59,7 @@ impl Hittable for Sphere {
 
 #[cfg(test)]
 mod tests {
-    use crate::ray::Ray;
+    use crate::{color::Color, material::Lambertian, ray::Ray};
 
     use super::*;
     use approx::*;
@@ -76,19 +88,18 @@ mod tests {
         let origin = Point3::new(0.0, 0.0, 0.0);
         let direction = Vec3::new(0.0, 0.0, -1.0);
         let ray = Ray::new(origin, direction);
+        let material = Lambertian::new(Color::new(0.7, 0.3, 0.3));
+        let mock_material = Lambertian::new(Color::new(0.7, 0.3, 0.3));
 
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material);
 
         let result = sphere.hit(&ray, 3.0, 0.0);
         let expected = HitRecord::new(
             Point3::new(0.0, 0.0, -0.5),
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: 1.0,
-            },
+            Vec3::new(0.0, 0.0, 1.0),
             0.5,
             true,
+            &mock_material,
         );
 
         match result {
@@ -106,19 +117,18 @@ mod tests {
         let origin = Point3::new(0.0, 0.0, 0.0);
         let direction = Vec3::new(0.0, 0.0, -1.0);
         let ray = Ray::new(origin, direction);
+        let material = Lambertian::new(Color::new(0.7, 0.3, 0.3));
+        let mock_material = Lambertian::new(Color::new(0.7, 0.3, 0.3));
 
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material);
 
         let result = sphere.hit(&ray, 3.0, 1.0);
         let expected = HitRecord::new(
             Point3::new(0.0, 0.0, -1.5),
-            Vec3 {
-                x: 0.0,
-                y: 0.0,
-                z: -1.0,
-            },
+            Vec3::new(0.0, 0.0, -1.0),
             1.5,
             false,
+            &mock_material,
         );
 
         match result {
@@ -136,8 +146,9 @@ mod tests {
         let origin = Point3::new(0.0, 0.0, 0.0);
         let direction = Vec3::new(0.0, 0.0, -1.0);
         let ray = Ray::new(origin, direction);
+        let material = Lambertian::new(Color::new(0.7, 0.3, 0.3));
 
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material);
 
         let result = sphere.hit(&ray, 0.4, 0.0);
 
@@ -149,8 +160,9 @@ mod tests {
         let origin = Point3::new(0.0, 0.0, 0.0);
         let direction = Vec3::new(0.0, 1.0, 0.0);
         let ray = Ray::new(origin, direction);
+        let material = Lambertian::new(Color::new(0.7, 0.3, 0.3));
 
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, material);
 
         let result = sphere.hit(&ray, 0.4, 0.0);
 
