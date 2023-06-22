@@ -16,13 +16,13 @@ impl Lambertian {
 
 impl Material for Lambertian {
     fn scatter(&self, r_in: &Ray, hit_record: HitRecord) -> (Color, Ray, bool) {
-        let mut scatter_direction = hit_record.normal + Vec3::random_unit_vector();
+        let mut scatter_direction: Vec3 = hit_record.normal + Vec3::random_unit_vector();
 
         if scatter_direction.near_zero() {
             scatter_direction = hit_record.normal;
         }
 
-        let scattered = Ray::new(hit_record.p, scatter_direction);
+        let scattered: Ray = Ray::new(hit_record.p, scatter_direction);
 
         return (self.albedo, scattered, true);
     }
@@ -41,12 +41,12 @@ impl Metal {
 
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, hit_record: HitRecord) -> (Color, Ray, bool) {
-        let reflected = r_in.direction.unit_vector().reflect(hit_record.normal);
-        let scattered = Ray::new(
+        let reflected: Vec3 = r_in.direction.unit_vector().reflect(hit_record.normal);
+        let scattered: Ray = Ray::new(
             hit_record.p,
             reflected + self.fuzz * Vec3::random_in_unit_sphere(),
         );
-        let success = scattered.direction.dot(hit_record.normal) > 0.0;
+        let success: bool = scattered.direction.dot(hit_record.normal) > 0.0;
 
         return (self.albedo, scattered, success);
     }
@@ -64,18 +64,30 @@ impl Dielectric {
 
 impl Material for Dielectric {
     fn scatter(&self, r_in: &Ray, hit_record: HitRecord) -> (Color, Ray, bool) {
-        let refraction_ratio = if hit_record.front_face {
+        let refraction_ratio: f64 = if hit_record.front_face {
             1.0 / self.ir
         } else {
             self.ir
         };
 
-        let unit_direction = r_in.direction.unit_vector();
-        let refracted = unit_direction.refract(hit_record.normal, refraction_ratio);
+        let unit_direction: Vec3 = r_in.direction.unit_vector();
+
+        let cos_theta: f64 = (-unit_direction.dot(hit_record.normal)).min(1.0);
+        let sin_theta: f64 = (1.0 - cos_theta * cos_theta).sqrt();
+
+        let cannot_refract: bool = refraction_ratio * sin_theta > 1.0;
+
+        let direction: Vec3;
+
+        if cannot_refract {
+            direction = unit_direction.reflect(hit_record.normal)
+        } else {
+            direction = unit_direction.refract(hit_record.normal, refraction_ratio)
+        }
 
         return (
             Color::new(1.0, 1.0, 1.0),
-            Ray::new(hit_record.p, refracted),
+            Ray::new(hit_record.p, direction),
             true,
         );
     }
