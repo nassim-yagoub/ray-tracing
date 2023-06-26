@@ -163,6 +163,14 @@ impl Vec3 {
 
         return r_out_parallel + r_out_perp;
     }
+
+    pub fn cross_product(self, other: Vec3) -> Vec3 {
+        return Vec3::new(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        );
+    }
 }
 
 #[cfg(test)]
@@ -277,5 +285,18 @@ mod tests {
         let expected = Vec3::new(0.0, -2.0, 0.0);
 
         assert_vec3_equal!(expected, result);
+    }
+
+    #[test]
+    fn cross_product() {
+        let vectorx: Vec3 = Vec3::new(1.0, 0.0, 0.0);
+        let vectory: Vec3 = Vec3::new(0.0, 1.0, 0.0);
+        let vectorz: Vec3 = Vec3::new(0.0, 0.0, 1.0);
+
+        assert_vec3_equal!(vectorx.cross_product(vectory), vectorz);
+        assert_vec3_equal!(vectory.cross_product(vectorz), vectorx);
+        assert_vec3_equal!(vectorz.cross_product(vectorx), vectory);
+
+        assert_vec3_equal!(vectory.cross_product(vectorx), -vectorz);
     }
 }

@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+
 use crate::{
     ray::Ray,
     vec3::{Point3, Vec3},
@@ -8,33 +10,46 @@ pub struct Camera {
     lower_left_corner: Point3,
     horizontal: Vec3,
     vertical: Vec3,
+    pub vfov: f64,
+    pub aspect_ratio: f64,
 }
 
 impl Camera {
-    pub fn new() -> Camera {
-        const ASPECT_RATIO: f64 = 16.0 / 9.0;
-        const VIEWPORT_HEIGHT: f64 = 2.0;
-        const VIEWPORT_WIDTH: f64 = ASPECT_RATIO * VIEWPORT_HEIGHT;
-        const FOCAL_LENGTH: f64 = 1.0;
+    pub fn new(
+        lookfrom: Point3,
+        lookat: Point3,
+        vup: Vec3,
+        vfov: f64,
+        aspect_ratio: f64,
+    ) -> Camera {
+        let theta: f64 = vfov * PI / 180.0;
+        let h: f64 = (theta / 2.0).tan();
+        let viewport_height: f64 = 2.0 * h;
+        let viewport_width: f64 = aspect_ratio * viewport_height;
 
-        let origin = Point3::new(0.0, 0.0, 0.0);
-        let horizontal = Vec3::new(VIEWPORT_WIDTH, 0.0, 0.0);
-        let vertical = Vec3::new(0.0, VIEWPORT_HEIGHT, 0.0);
-        let lower_left_corner =
-            origin - horizontal / 2.0 - vertical / 2.0 - Vec3::new(0.0, 0.0, FOCAL_LENGTH);
+        let w = (lookfrom - lookat).unit_vector();
+        let u = (vup.cross_product(w)).unit_vector();
+        let v = w.cross_product(u);
+
+        let origin: Point3 = lookfrom;
+        let horizontal = viewport_width * u;
+        let vertical = viewport_height * v;
+        let lower_left_corner = origin - horizontal / 2.0 - vertical / 2.0 - w;
 
         Camera {
             origin,
             lower_left_corner,
             horizontal,
             vertical,
+            aspect_ratio,
+            vfov,
         }
     }
 
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
+    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
         Ray {
             origin: self.origin,
-            direction: self.lower_left_corner + u * self.horizontal + v * self.vertical
+            direction: self.lower_left_corner + s * self.horizontal + t * self.vertical
                 - self.origin,
         }
     }
